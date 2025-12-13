@@ -1,0 +1,54 @@
+body {
+    font-family: Arial, sans-serif;
+    min-width: 350px; /* Gives enough space for the dashboard */
+    padding: 15px;
+}
+h1 {
+    font-size: 1.2em;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 5px;
+    margin-top: 0;
+}
+#quiz-list {
+    margin-bottom: 15px;
+}
+.quiz-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed #ddd;
+}
+.quiz-item:last-child {
+    border-bottom: none;
+}
+.quiz-info {
+    max-width: 70%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.course-name {
+    font-size: 0.85em;
+    color: #666;
+    margin-left: 5px;
+}
+.date {
+    display: block;
+    font-size: 0.75em;
+    color: #999;
+}
+.quiz-actions button {
+    margin-left: 5px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 0.8em;
+}
+#download-all {
+    width: 100%;
+    padding: 8px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}

@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Canvas Quiz Compiler",
+  "version": "1.0",
+  "description": "Records Canvas quiz questions and user answers automatically.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*.instructure.com/courses/*/quizzes/*" 
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+    },
+  "content_scripts": [
+    {
+      "matches": ["https://*.instructure.com/courses/*/quizzes/*"],
+      "js": ["contentScript.js"]
+    }
+  ]
+}

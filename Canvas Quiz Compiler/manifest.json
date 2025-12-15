@@ -7,15 +7,29 @@
     "storage"
   ],
   "host_permissions": [
-    "https://*.instructure.com/courses/*/quizzes/*" 
+    "https://*.instructure.com/courses/*/quizzes/*" ,
+    "https://*.instructure.com/courses/*/assignments/*"
   ],
+  "background": {
+    "service_worker": "background.js" 
+  },
+  "commands": {
+    "run_compiler": {
+      "suggested_key": {
+        "default": "Alt+R"
+      },
+      "description": "Run the Canvas Quiz Compiler"
+    }
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icon.png"
     },
   "content_scripts": [
     {
-      "matches": ["https://*.instructure.com/courses/*/quizzes/*"],
+      "matches": ["https://*.instructure.com/courses/*/quizzes/*",
+      "https://*.instructure.com/courses/*/assignments/*"
+      ],
       "js": ["contentScript.js"]
     }
   ]

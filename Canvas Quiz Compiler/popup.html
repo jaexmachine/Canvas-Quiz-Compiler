@@ -1,14 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8"> 
     <title>Quiz Compiler Dashboard</title>
-    <link rel="stylesheet" href="popup.css"> </head>
+    <link rel="stylesheet" href="popup.css"> 
+</head>
 <body>
-    <h1>📚 Compiled Quizzes</h1>
-    <div id="quiz-list">
-        <p>Loading quiz data...</p>
+    <div id="main-view">
+        <h1>📚 Compiled Quizzes</h1>
+        <div id="quiz-list">
+            <p>Loading quiz data...</p>
+        </div>
+        <button id="download-all" style="display: none;">Download All as Text</button>
     </div>
-    <button id="download-all" style="display: none;">Download All as Text</button>
+
+    <div id="detail-view" style="display: none;">
+        <button id="back-btn">⬅ Back to List</button>
+        <h2 id="detail-title"></h2>
+        <div id="detail-content"></div>
+    </div>
+
     <script src="popup.js"></script>
 </body>
 </html>

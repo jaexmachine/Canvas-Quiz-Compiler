@@ -30,7 +30,7 @@
       "matches": ["https://*.instructure.com/courses/*/quizzes/*",
       "https://*.instructure.com/courses/*/assignments/*"
       ],
-      "js": ["contentScript.js"]
-    }
+      "js": ["contentScript.js"],
+      "all_frames": true    }
   ]
 }

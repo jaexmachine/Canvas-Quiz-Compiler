@@ -51,4 +51,43 @@ h1 {
     color: white;
     border: none;
     cursor: pointer;
+    
+}
+#download-all:hover {
+    background-color: #0056b3;
+}
+#download-all:active {
+    background-color: #004085;
+}
+#detail-content {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 10px;
+    padding-right: 5px;
+}
+.question-block p {
+    margin: 5px 0;
+    font-size: 0.9em;
+}
+#back-btn {
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+.delete-btn {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.delete-btn:hover {
+    background-color: #cc0000;
+}
+
+.quiz-actions {
+    display: flex;
+    gap: 4px; /* Even spacing between buttons */
 }

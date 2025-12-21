@@ -1,107 +1,230 @@
-// Function to extract the Page Title (Quiz or Assignment)
-function getPageTitle() {
-    // Look for the main title element, common to both quizzes and assignments
-    const titleElement = document.querySelector('.quiz-title, .assignment-title, h1.header-title, h2.title, h1.page-title');
-    if (titleElement) {
-        return titleElement.textContent.trim();
-    }
-    // Fallback to the document title, stripping any Canvas-related suffix
-    return document.title.split('-')[0].trim() || 'Unnamed Page';
-}
-            
-// Function to scrape a question and its selected answer
-function scrapeQuestionData() {
-    const pageTitle = getPageTitle(); 
-    const compiledData = [];
-    
-    // --- Scrape Inputs (for Assignments and Text Quizzes) ---
-    // Look for main content area to focus the search
-    const contentArea = document.querySelector('#content, .ic-Layout-content, .assignment-content');
-    
-    if (contentArea) {
-        // Find all interactive input elements (text, textarea, or checked radio/checkbox)
-        // :not([disabled]) ensures we are only looking at active inputs
-        const inputs = contentArea.querySelectorAll('input[type="text"]:not([disabled]), textarea:not([disabled]), input:checked');
-        
-        if (inputs.length > 0) {
-            inputs.forEach((input, index) => {
-                let identifier = `Input ${index + 1}`;
-                let value = input.value.trim() || 'No answer recorded';
-                
-                if (input.type === 'radio' || input.type === 'checkbox') {
-                    // It's a choice input, try to get the label text
-                    const label = input.closest('label');
-                    // Clean up the label text to get just the answer
-                    value = label ? label.textContent.trim().replace(/\s+/g, ' ') : input.value; 
-                }
-                
-                // Try to find a nearby label or prompt to use as the identifier
-                // Search up a few levels to find context from a parent container
-                const container = input.closest('.question, .form-field, div') || contentArea;
-                const nearbyLabel = container.querySelector('label, p, h3, .question_text');
-                if (nearbyLabel) {
-                    // Use a concise version of the nearby text as the identifier
-                    identifier = nearbyLabel.textContent.trim().substring(0, 100).replace(/\s+/g, ' ') + '...'; 
-                }
-                
-                compiledData.push({
-                    questionNumber: index + 1,
-                    questionText: identifier, // Use the identifier as 'question text'
-                    userAnswer: value
-                });
+/**
+ * Canvas Quiz Compiler - Content Script
+ * Manages the UI injection and data scraping logic.
+ */
+
+// --- STATE MANAGEMENT ---
+
+// Helper to check the current recording state from storage
+async function getCompilerState() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get(['isCompiling', 'currentSessionKey'], (res) => {
+            resolve({
+                isCompiling: res.isCompiling || false,
+                currentSessionKey: res.currentSessionKey || null
             });
-        }
-    }
-    
-    if (compiledData.length === 0) {
-        console.warn(`Canvas Compiler: Could not find any input fields in the main content for ${pageTitle}.`);
-    }
-
-    // --- Data Object to be Saved ---
-    const quizData = { 
-        quizTitle: pageTitle,
-        course: document.title.split('-')[0].trim(), 
-        timestamp: Date.now(),
-        // Fallback logic: if no specific inputs were found, save a snippet of the main content
-        questions: compiledData.length > 0 ? compiledData : [{
-            questionNumber: 1, 
-            questionText: "Full Page Content", 
-            userAnswer: contentArea ? contentArea.innerText.substring(0, 500) + "..." : "No compile data found. Try manually copying."
-        }] 
-    };
-
-    // --- Save Data to Chrome Storage ---
-    // Use pageTitle and timestamp to create a unique key
-    const uniqueKey = `${pageTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${quizData.timestamp}`; 
-
-    chrome.storage.local.get('compiledQuizzes', (result) => {
-        // Get existing object or initialize a new one
-        let allQuizzes = result.compiledQuizzes || {}; 
-
-        // Add the new quiz data under the unique key
-        allQuizzes[uniqueKey] = quizData;
-
-        // Save the updated object back to storage
-        chrome.storage.local.set({ compiledQuizzes: allQuizzes }, () => {
-            if (chrome.runtime.lastError) {
-                console.error("Error saving data:", chrome.runtime.lastError);
-            } else {
-                console.log(`[Canvas Quiz Compiler] Successfully compiled and saved: ${pageTitle} (Key: ${uniqueKey})`);
-            }
         });
     });
 }
 
+// --- UI INJECTION ---
 
-// --- INITIALIZATION AND LISTENERS ---
+async function injectRecordButton() {
+    // Prevent duplicate buttons
+    if (document.getElementById('canvas-compiler-btn')) return;
 
-// Listen for a message from the background script (triggered by the Alt+R command)
+    // Target the Canvas quiz button bar
+    const actionButtons = document.querySelector('.quiz-header, .header-bar-right, #quiz-controls, .header-bar-action-buttons');
+    
+    if (actionButtons) {
+        const state = await getCompilerState();
+        const compileBtn = document.createElement('button');
+        compileBtn.id = 'canvas-compiler-btn';
+        
+        // Restore visual state from storage
+        if (state.isCompiling) {
+            compileBtn.innerHTML = '⏳ Compiling... (Click to Save)';
+            compileBtn.style.backgroundColor = '#ff9800'; 
+            updateLiveIndicator(true); 
+        } else {
+            compileBtn.innerHTML = '🔴 Start Compiling';
+            compileBtn.style.backgroundColor = ''; 
+        }
+
+        compileBtn.className = 'btn btn-primary'; 
+        compileBtn.style.marginLeft = '10px';
+
+        compileBtn.onclick = async (e) => {
+            e.preventDefault();
+            const currentState = await getCompilerState();
+
+            if (!currentState.isCompiling) {
+                // START SESSION
+               const newKey = `${getPageTitle().replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
+            chrome.storage.local.set({ 
+            isCompiling: true, 
+            currentSessionKey: newKey 
+                }, () => {
+                    compileBtn.innerHTML = '⏳ Compiling... (Click to Save)';
+                    compileBtn.style.backgroundColor = '#ff9800';
+                    scrapeAndSave(); 
+                });
+            } else {
+                // END SESSION
+                chrome.storage.local.set({ 
+                    isCompiling: false, 
+                    currentSessionKey: null 
+                }, () => {
+                    compileBtn.innerHTML = '✅ Compiled!';
+                    compileBtn.style.backgroundColor = '#4caf50'; 
+                    updateLiveIndicator(false);
+                    setTimeout(() => {
+                        compileBtn.innerHTML = '🔴 Start Compiling';
+                        compileBtn.style.backgroundColor = ''; 
+                    }, 3000);
+                });
+            }
+        };
+
+        actionButtons.appendChild(compileBtn);
+    }
+}
+
+function updateLiveIndicator(visible, count = 0) {
+    let indicator = document.getElementById('compiler-live-status');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'compiler-live-status';
+        indicator.style.cssText = `
+            position: fixed; bottom: 20px; right: 20px; 
+            padding: 10px 20px; background: #333; color: white; 
+            border-radius: 50px; z-index: 9999; font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); pointer-events: none;
+        `;
+        document.body.appendChild(indicator);
+    }
+    indicator.style.display = visible ? 'block' : 'none';
+    if (visible) indicator.innerHTML = `📡 Recording: ${count} Questions Saved`;
+}
+
+// --- SCRAPING LOGIC ---
+function scrapeAndSave() {
+    chrome.storage.local.get(['isCompiling', 'currentSessionKey', 'compiledQuizzes'], (res) => {
+        if (!res.isCompiling || !res.currentSessionKey) return;
+
+        let allQuizzes = res.compiledQuizzes || {};
+        let currentQuizData = allQuizzes[res.currentSessionKey] || {
+            quizTitle: getPageTitle(),
+            course: document.title.split('-')[0].trim(),
+            timestamp: Date.now(),
+            questions: []
+        };
+
+        // 1. Create a Map of existing questions to prevent duplicates
+        const questionsMap = new Map();
+        currentQuizData.questions.forEach(q => {
+            if (q.questionText) questionsMap.set(q.questionText, q);
+        });
+
+        // 2. Find currently visible questions
+        const questionNodes = document.querySelectorAll('.question');
+        
+        // FIX: If we are on a blank loading screen, don't update anything!
+        if (questionNodes.length === 0) {
+            updateLiveIndicator(true, questionsMap.size);
+            return; 
+        }
+
+        let addedNew = false;
+        questionNodes.forEach((node) => {
+            const textNode = node.querySelector('.question_text');
+            if (!textNode || textNode.innerText.trim() === "") return;
+
+            const questionText = textNode.innerText.trim();
+            let userAnswer = "No answer";
+
+            // Scrape the answer text logic
+            const selectedRadio = node.querySelector('input:checked');
+            if (selectedRadio) {
+                let label = node.querySelector(`label[for="${selectedRadio.id}"]`) || selectedRadio.closest('label');
+                if (!label || label.innerText.trim() === "") {
+                    const row = selectedRadio.closest('.answer, .answer_label, .rc-Option');
+                    userAnswer = row ? row.innerText.trim() : "Choice selected";
+                } else {
+                    userAnswer = label.innerText.trim();
+                }
+                userAnswer = userAnswer.replace(/^[a-z]\)\s*/i, '').replace(/\s+/g, ' ').trim();
+            }
+
+            const textInput = node.querySelector('input[type="text"], textarea');
+            if (textInput && textInput.value.trim() !== "") {
+                userAnswer = textInput.value.trim();
+            }
+
+            // 3. Only update if the answer actually changed or it's a new question
+            if (!questionsMap.has(questionText) || questionsMap.get(questionText).userAnswer !== userAnswer) {
+                questionsMap.set(questionText, {
+                    questionText: questionText,
+                    userAnswer: userAnswer
+                });
+                addedNew = true;
+            }
+        });
+
+        // 4. Only save to storage if we actually found something new to avoid "tripling"
+        if (addedNew) {
+            const finalQuestions = Array.from(questionsMap.values()).map((q, idx) => ({
+                ...q,
+                questionNumber: idx + 1 // Re-index correctly
+            }));
+
+            currentQuizData.questions = finalQuestions;
+            allQuizzes[res.currentSessionKey] = currentQuizData;
+
+            chrome.storage.local.set({ compiledQuizzes: allQuizzes }, () => {
+                updateLiveIndicator(true, finalQuestions.length);
+            });
+        } else {
+            // Just update the indicator with the current count
+            updateLiveIndicator(true, questionsMap.size);
+        }
+    });
+}
+// --- HELPERS & INITIALIZATION ---
+
+function getPageTitle() {
+    const titleNode = document.querySelector('.quiz-title, #quiz_title, h1');
+    return titleNode ? titleNode.innerText.trim() : "Untitled Quiz";
+}
+
+// Listen for Alt+R command
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "compile_quiz_data") {
-        console.log("[Canvas Quiz Compiler] Command received from background script. Compiling data...");
-        scrapeQuestionData();
+        scrapeAndSave();
         sendResponse({ status: "compiled" });
     }
 });
 
-console.log("[Canvas Quiz Compiler] Content Script Loaded. Press Alt+R (Option+R) to compile data.");
+// Detect answer changes for live overwriting
+document.addEventListener('change', () => {
+    chrome.storage.local.get('isCompiling', (res) => {
+        if (res.isCompiling) scrapeAndSave();
+    });
+});
+
+// --- INITIALIZATION AND LISTENERS ---
+
+let debounceTimer;
+
+
+const compilerObserver = new MutationObserver(() => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        injectRecordButton();
+        // Check if we should auto-scrape after a page change
+        chrome.storage.local.get('isCompiling', (res) => {
+            if (res.isCompiling) scrapeAndSave();
+        });
+    }, 500); // 500ms delay to let Canvas finish loading questions
+});
+
+compilerObserver.observe(document.body, { childList: true, subtree: true });
+
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "compile_quiz_data") {
+        scrapeAndSave();
+        sendResponse({ status: "compiled" });
+    }
+});
+injectRecordButton();

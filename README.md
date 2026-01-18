@@ -36,7 +36,7 @@ To load the extension in developer mode:
 2. Click the **🔴 Start Compiling** button injected at the top of the quiz header.
 3. As you select answers, the floating indicator (bottom-right) will update to show the question has been saved.
 4. If you change an answer, the compiler automatically updates the record for that specific question.
-5. Click **✅ Compiling... (Click to Save)** to end the session and finalize the record.
+5. Click **✅ Compiling... (Click to Stop)** to end the session and finalize the record.
 
 ### Exporting Data
 

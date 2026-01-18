@@ -7,15 +7,17 @@
 </head>
 <body>
     <div id="main-view">
-        <h1>📚 Compiled Quizzes</h1>
+        <h1><span>📚</span> Quiz Dashboard</h1>
         <div id="quiz-list">
-            <p>Loading quiz data...</p>
+            <p style="text-align: center; color: #64748b; margin-top: 40px;">
+                Searching for compiled quizzes...
+            </p>
         </div>
-        <button id="download-all" style="display: none;">Download All as Text</button>
+        <button id="download-all" style="display: none ;">Export All Quizzes (.txt)</button>
     </div>
 
     <div id="detail-view" style="display: none;">
-        <button id="back-btn">⬅ Back to List</button>
+        <button id="back-btn">← Back to Dashboard</button>
         <h2 id="detail-title"></h2>
         <div id="detail-content"></div>
     </div>

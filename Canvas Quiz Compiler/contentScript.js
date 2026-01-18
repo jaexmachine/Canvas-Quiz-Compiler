@@ -1,6 +1,6 @@
 /**
- * Canvas Quiz Compiler - Content Script
- * Manages the UI injection and data scraping logic.
+ Canvas Quiz Compiler - Content Script
+ Manages the UI injection and data scraping logic.
  */
 
 // --- STATE MANAGEMENT ---
@@ -33,7 +33,7 @@ async function injectRecordButton() {
         
         // Restore visual state from storage
         if (state.isCompiling) {
-            compileBtn.innerHTML = '⏳ Compiling... (Click to Save)';
+            compileBtn.innerHTML = '⏳ Compiling... (Click to Stop)';
             compileBtn.style.backgroundColor = '#ff9800'; 
             updateLiveIndicator(true); 
         } else {

@@ -1,93 +1,131 @@
-body {
-    font-family: Arial, sans-serif;
-    min-width: 350px; /* Gives enough space for the dashboard */
-    padding: 15px;
-}
-h1 {
-    font-size: 1.2em;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 5px;
-    margin-top: 0;
-}
-#quiz-list {
-    margin-bottom: 15px;
-}
-.quiz-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px dashed #ddd;
-}
-.quiz-item:last-child {
-    border-bottom: none;
-}
-.quiz-info {
-    max-width: 70%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.course-name {
-    font-size: 0.85em;
-    color: #666;
-    margin-left: 5px;
-}
-.date {
-    display: block;
-    font-size: 0.75em;
-    color: #999;
-}
-.quiz-actions button {
-    margin-left: 5px;
-    padding: 4px 8px;
-    cursor: pointer;
-    font-size: 0.8em;
-}
-#download-all {
-    width: 100%;
-    padding: 8px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
+:root {
+    /* Aesthetic Green Palette */
+    --primary-green: #10b981;
+    --dark-green: #065f46;
+    --light-green: #ecfdf5;
+    --accent-green: #34d399;
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
     
-}
-#download-all:hover {
-    background-color: #0056b3;
-}
-#download-all:active {
-    background-color: #004085;
-}
-#detail-content {
-    max-height: 400px;
-    overflow-y: auto;
-    margin-top: 10px;
-    padding-right: 5px;
-}
-.question-block p {
-    margin: 5px 0;
-    font-size: 0.9em;
-}
-#back-btn {
-    margin-bottom: 10px;
-    cursor: pointer;
-}
-.delete-btn {
-    background-color: #ff4d4d;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 6px;
-    cursor: pointer;
-    transition: background 0.2s;
+    /* 3D Shadows */
+    --shadow-flat: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-raised: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-.delete-btn:hover {
-    background-color: #cc0000;
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--dark-green);
+    min-width: 380px;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
 }
 
+h1 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    text-align: center;
+    color: var(--dark-green);
+    letter-spacing: -0.5px;
+    margin-bottom: 24px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* 3D Glass Cards */
+.quiz-item {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow-flat);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy 3D effect */
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.quiz-item:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: var(--shadow-raised);
+    background: #ffffff;
+}
+
+.quiz-info strong {
+    font-size: 1.1rem;
+    color: var(--dark-green);
+}
+
+.date {
+    font-size: 0.8rem;
+    color: var(--primary-green);
+    font-weight: 600;
+}
+
+/* Tactical 3D Buttons */
 .quiz-actions {
     display: flex;
-    gap: 4px; /* Even spacing between buttons */
+    gap: 10px;
+}
+
+button {
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.1); /* 3D edge */
+}
+
+button:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+}
+
+.view-btn {
+    flex: 1;
+    background: white;
+    color: var(--primary-green);
+    border: 1px solid var(--primary-green);
+}
+
+.download-btn {
+    flex: 2;
+    background: var(--primary-green);
+    color: white;
+}
+
+.download-btn:hover {
+    background: var(--accent-green);
+}
+
+.delete-btn {
+    background: #fee2e2;
+    color: #ef4444;
+    padding: 10px 14px;
+}
+
+/* Floating Action Button Style for "Download All" */
+#download-all {
+    width: 100%;
+    padding: 15px;
+    background: var(--dark-green);
+    color: white;
+    border-radius: 12px;
+    font-size: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(6, 95, 70, 0.3);
+    margin-top: 10px;
+}
+
+/* Question Blocks in Detail View */
+.question-block {
+    background: white;
+    padding: 16px;
+    border-radius: 14px;
+    margin-bottom: 12px;
+    border-left: 5px solid var(--primary-green);
+    box-shadow: var(--shadow-flat);
 }

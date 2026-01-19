@@ -8,12 +8,24 @@
 // Helper to check the current recording state from storage
 async function getCompilerState() {
     return new Promise((resolve) => {
-        chrome.storage.local.get(['isCompiling', 'currentSessionKey'], (res) => {
-            resolve({
-                isCompiling: res.isCompiling || false,
-                currentSessionKey: res.currentSessionKey || null
+        try {
+            if (!chrome.runtime?.id) {
+                resolve({ isCompiling: false, currentSessionKey: null });
+                return;
+            }
+            chrome.storage.local.get(['isCompiling', 'currentSessionKey'], (res) => {
+                if (chrome.runtime.lastError) {
+                    resolve({ isCompiling: false, currentSessionKey: null });
+                    return;
+                }
+                resolve({
+                    isCompiling: res.isCompiling || false,
+                    currentSessionKey: res.currentSessionKey || null
+                });
             });
-        });
+        } catch (error) {
+            resolve({ isCompiling: false, currentSessionKey: null });
+        }
     });
 }
 
@@ -99,7 +111,13 @@ function updateLiveIndicator(visible, count = 0) {
 
 // --- SCRAPING LOGIC ---
 function scrapeAndSave() {
+    try {
+        if (!chrome.runtime?.id) return;
+    } catch (error) {
+        return;
+    }
     chrome.storage.local.get(['isCompiling', 'currentSessionKey', 'compiledQuizzes'], (res) => {
+        if (chrome.runtime.lastError) return;
         if (!res.isCompiling || !res.currentSessionKey) return;
 
         let allQuizzes = res.compiledQuizzes || {};
@@ -132,10 +150,12 @@ function scrapeAndSave() {
 
             const questionText = textNode.innerText.trim();
             let userAnswer = "No answer";
+            let questionType = "unknown";
 
-            // Scrape the answer text logic
-            const selectedRadio = node.querySelector('input:checked');
+            // Check for Multiple Choice questions (radio buttons)
+            const selectedRadio = node.querySelector('input[type="radio"]:checked');
             if (selectedRadio) {
+                questionType = "multiple_choice";
                 let label = node.querySelector(`label[for="${selectedRadio.id}"]`) || selectedRadio.closest('label');
                 if (!label || label.innerText.trim() === "") {
                     const row = selectedRadio.closest('.answer, .answer_label, .rc-Option');
@@ -146,16 +166,40 @@ function scrapeAndSave() {
                 userAnswer = userAnswer.replace(/^[a-z]\)\s*/i, '').replace(/\s+/g, ' ').trim();
             }
 
-            const textInput = node.querySelector('input[type="text"], textarea');
-            if (textInput && textInput.value.trim() !== "") {
-                userAnswer = textInput.value.trim();
+            // Check for True/False questions (also uses radio but different structure)
+            const selectedCheckbox = node.querySelector('input[type="checkbox"]:checked');
+            if (selectedCheckbox && !selectedRadio) {
+                questionType = "true_false";
+                const label = node.querySelector(`label[for="${selectedCheckbox.id}"]`) || selectedCheckbox.closest('label');
+                userAnswer = label ? label.innerText.trim() : "Selected";
+            }
+
+            // Check for Identification/Fill-in-the-Blank/Short Answer questions (text inputs)
+            // Only look for inputs in answer areas, not in the question text itself
+            const answerContainer = node.querySelector('.answers, .answer, .question_input');
+            if (answerContainer) {
+                const textInputs = answerContainer.querySelectorAll('input[type="text"], textarea');
+                if (textInputs.length > 0) {
+                    questionType = "identification";
+                    const answers = [];
+                    textInputs.forEach(input => {
+                        const val = input.value.trim();
+                        if (val !== "") {
+                            answers.push(val);
+                        }
+                    });
+                    if (answers.length > 0) {
+                        userAnswer = answers.join("; ");
+                    }
+                }
             }
 
             // 3. Only update if the answer actually changed or it's a new question
             if (!questionsMap.has(questionText) || questionsMap.get(questionText).userAnswer !== userAnswer) {
                 questionsMap.set(questionText, {
                     questionText: questionText,
-                    userAnswer: userAnswer
+                    userAnswer: userAnswer,
+                    questionType: questionType
                 });
                 addedNew = true;
             }
@@ -172,6 +216,7 @@ function scrapeAndSave() {
             allQuizzes[res.currentSessionKey] = currentQuizData;
 
             chrome.storage.local.set({ compiledQuizzes: allQuizzes }, () => {
+                if (chrome.runtime.lastError) return;
                 updateLiveIndicator(true, finalQuestions.length);
             });
         } else {
@@ -183,23 +228,25 @@ function scrapeAndSave() {
 // --- HELPERS & INITIALIZATION ---
 
 function getPageTitle() {
-    const titleNode = document.querySelector('.quiz-title, #quiz_title, h1');
-    return titleNode ? titleNode.innerText.trim() : "Untitled Quiz";
-}
-
-// Listen for Alt+R command
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "compile_quiz_data") {
-        scrapeAndSave();
-        sendResponse({ status: "compiled" });
+    try {
+        const titleNode = document.querySelector('.quiz-title, #quiz_title, h1');
+        return titleNode ? titleNode.innerText.trim() : "Untitled Quiz";
+    } catch (error) {
+        return "Untitled Quiz";
     }
-});
+}
 
 // Detect answer changes for live overwriting
 document.addEventListener('change', () => {
-    chrome.storage.local.get('isCompiling', (res) => {
-        if (res.isCompiling) scrapeAndSave();
-    });
+    try {
+        if (!chrome.runtime?.id) return;
+        chrome.storage.local.get('isCompiling', (res) => {
+            if (chrome.runtime.lastError || !res.isCompiling) return;
+            scrapeAndSave();
+        });
+    } catch (error) {
+        // Extension context invalidated, ignore
+    }
 });
 
 // --- INITIALIZATION AND LISTENERS ---
@@ -210,11 +257,18 @@ let debounceTimer;
 const compilerObserver = new MutationObserver(() => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-        injectRecordButton();
-        // Check if we should auto-scrape after a page change
-        chrome.storage.local.get('isCompiling', (res) => {
-            if (res.isCompiling) scrapeAndSave();
-        });
+        try {
+            if (!chrome.runtime?.id) return;
+            injectRecordButton();
+            // Check if we should auto-scrape after a page change
+            chrome.storage.local.get('isCompiling', (res) => {
+                if (chrome.runtime.lastError || !res.isCompiling) return;
+                scrapeAndSave();
+            });
+        } catch (error) {
+            // Extension context invalidated, stop observing
+            compilerObserver.disconnect();
+        }
     }, 500); // 500ms delay to let Canvas finish loading questions
 });
 

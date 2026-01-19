@@ -1,0 +1,140 @@
+QUIZ: [F1-FORMATIVE] Formative Assessment 1
+COURSE: Quiz: [F1
+DATE: 1/19/2026, 12:06:15 PM
+------------------------------------------
+
+Q1: The code below must print the number of rows updated, what is the missing part of the code?
+
+Declare
+
+v_cal_increase employees.salary%type := 800;
+
+begin
+
+update copy_emp
+
+set salary = salary + v_sal_increase
+
+where job_id = ‘ST_CLERK’;
+
+dbms_output.put_line(_____________ || ‘ rows updated.’);
+
+end;
+ANSWER: SQL%ROWCOUNT
+
+Q2: What could be the possible error of the given code below?
+
+DECLARE
+
+v_salary employees.salary%TYPE; 
+
+BEGIN
+
+SELECT salary INTO v_salary
+
+FROM employees;
+
+DBMS_OUTPUT.PUT_LINE(' Salary is : ' || v_salary); 
+
+END;
+ANSWER: Query returns more than 1 row
+
+Q3: An integer value that represents the number of rows affected by the most recent SQL.
+ANSWER: SQL%ROWCOUNT
+
+Q4: Refer to M1S2-code reference#3, data type for vmesg variable must be CHAR.
+ANSWER: False
+
+Q5: Applying the logical operator NOT to a null yields FALSE.
+ANSWER: False
+
+Q6: Refer to M1S2-code reference#2, the missing condition in (2) is vpop = 0.
+ANSWER: False
+
+Q7: Consider the given code fragment below. The condition will return a true value.      
+
+A:=null; B:=null;
+
+If A = B then . . . . .
+ANSWER: False
+
+Q8: Applying the logical operator NOT to a null yields NULL.
+ANSWER: True
+
+Q9: Refer to M1S2-code reference#3, what is the correct data type for vmesg?
+ANSWER: VARCHAR2
+
+Q10: Refer to M1S2-code reference#3, what is missing in the creation of the implicit cursor?
+ANSWER: Airports
+
+Q11: What is missing in the given code?
+
+DECLARE
+
+v_grade     CHAR(1) := 'A';  v_appraisal VARCHAR2(20);
+
+BEGIN
+
+v_appraisal :=
+
+CASE 
+
+WHEN v_grade = 'A' THEN 'Excellent' 
+
+WHEN v_grade IN ('B','C') THEN 'Good' 
+
+END;
+
+DBMS_OUTPUT.PUT_LINE ('Grade: '|| v_grade || ' Appraisal ' || v_appraisal);
+
+END;
+ANSWER: Selector
+
+Q12: A _______ is an expression with a TRUE or FALSE value that is used to make a decision.
+ANSWER: Condition
+
+Q13: Refer to M1S2-code reference#3, what is missing in the last case selection?
+ANSWER: > 10000
+
+Q14: A ________ is used in order to come out of from the outer loop within an inner loop.
+ANSWER: BREAK STATEMENT
+
+Q15: Use the ______ loop when the statement inside the loop must execute at least once.
+ANSWER: BASIC
+
+Q16: Refer to M1S3-code reference#2, what is missing in the FOR … LOOP section? _________
+ANSWER: IN
+
+Q17: Refer to M1S3-code reference#1, what value must be stored in vctr inside the loop body?  ______________
+
+Note: Do not put space in your answer.
+ANSWER: 51
+
+Q18: What is missing in the given WHILE loop syntax? ________
+
+WHILE condition
+
+statement1; 
+
+statement2;
+
+. . .
+
+END ;
+ANSWER: LOOP
+
+Q19: A loop structure must have an exit clause.
+ANSWER: True
+
+Q20: The BASIC LOOP control structures are statements that enable you to execute statements in a PL/SQL block repeatedly.
+ANSWER: True
+
+Q21: In BASIC and WHILE loop, the iteration will terminate when the counter value meets the upper bound value.
+ANSWER: False
+
+Q22: In BASIC and WHILE loop, the iteration will terminate when the counter is > than the upper bound.
+ANSWER: False
+
+Q23: Use a DO..WHILE loop when the statement inside the loop must execute at least once.
+ANSWER: False
+

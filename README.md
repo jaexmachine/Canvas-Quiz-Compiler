@@ -4,7 +4,7 @@
 
 ---
 
-## 🚀 Features
+## Features
 
 The Canvas Quiz Compiler automates the extraction of quiz data, ensuring you have a clean record of every question and answer choice.
 
@@ -16,7 +16,7 @@ The Canvas Quiz Compiler automates the extraction of quiz data, ensuring you hav
 
 ---
 
-## 🛠 Installation
+## Installation
 
 To load the extension in developer mode:
 
@@ -28,7 +28,7 @@ To load the extension in developer mode:
 
 ---
 
-## 📖 Usage
+## Usage
 
 ### Recording a Quiz
 
@@ -51,7 +51,7 @@ To load the extension in developer mode:
 
 ---
 
-## 📜 Licensing & Permissions
+## Licensing & Permissions
 
 This project is protected under standard copyright law, **All Rights Reserved**, with the following limited permissions:
 

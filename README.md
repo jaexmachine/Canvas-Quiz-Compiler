@@ -10,6 +10,9 @@ A Manifest V3 Chrome extension for recording Canvas quiz questions and selected 
 - Storage-backed recording state suitable for an ephemeral MV3 service worker.
 - Search, question counts, review view, text export, JSON archive export, and deletion.
 - Debounced page observation and support for radio, checkbox, and short-answer inputs.
+- Repeated quiz attempts are labeled automatically; changed answers are retained with the previous answer for comparison.
+- Multi-select checkbox answers are captured together instead of only saving the first selection.
+- Recording stops when Canvas exposes a completed/submitted quiz state.
 
 ## Load locally
 

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"> 
+    <title>Quiz Compiler Dashboard</title>
+    <link rel="stylesheet" href="popup.css"> 
+</head>
+<body>
+    <div id="main-view">
+        <h1><span>📚</span> Quiz Dashboard</h1>
+        <div id="quiz-list">
+            <p style="text-align: center; color: #64748b; margin-top: 40px;">
+                Searching for compiled quizzes...
+            </p>
+        </div>
+        <button id="download-all" style="display: none ;">Export All Quizzes (.txt)</button>
+    </div>
+
+    <div id="detail-view" style="display: none;">
+        <button id="back-btn">← Back to Dashboard</button>
+        <h2 id="detail-title"></h2>
+        <div id="detail-content"></div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

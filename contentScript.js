@@ -27,12 +27,13 @@
   };
 
   function readChoices(node) {
-    const selector = '.answer, .answer_label, .answer_row, [role="option"], label';
+    const selector = '.answer, .answer_label, .answer_row, [role="option"], label, button';
     const seen = new Set();
     return [...node.querySelectorAll(selector)].filter(element => {
       if (element.querySelector(selector)) return false;
       const text = clean(element.innerText);
       if (!text || text.length > 300) return false;
+      if (element.matches('button') && /^(next|previous|back|submit|save|continue|close)$/i.test(text)) return false;
       const normalized = normalize(text);
       if (seen.has(normalized)) return false;
       seen.add(normalized);
@@ -40,7 +41,7 @@
     }).map(element => {
       const context = choiceContext(element, node);
       const correct = /\b(correct|correct_answer|answer_correct|right_answer|correct-answer)\b/.test(context) && !/\b(incorrect|wrong|error)\b/.test(context);
-      const selected = Boolean(element.querySelector('input:checked')) || /\b(selected|user_answer|answer_selected|incorrect|wrong)\b/.test(context);
+      const selected = Boolean(element.querySelector('input:checked')) || /\b(selected|user_answer|answer_selected|incorrect|wrong)\b/.test(context) || element.matches('button');
       return { text: clean(element.innerText), correct, selected };
     });
   }

@@ -159,7 +159,17 @@
   async function toggle() {
     const { [stateKey]: state } = await storage.get(stateKey);
     if (state?.isCompiling) await storage.set({ [stateKey]: { isCompiling: false, sessionId: null } });
-    else {
+    else await startRecording();
+    await refresh(); capture();
+  }
+
+  let startingRecording = false;
+  async function startRecording() {
+    if (startingRecording) return;
+    startingRecording = true;
+    try {
+      const { [stateKey]: state } = await storage.get(stateKey);
+      if (state?.isCompiling) return;
       const { compiledQuizzes = {} } = await storage.get('compiledQuizzes');
       const baseTitle = title();
       const attempts = Object.values(compiledQuizzes)
@@ -167,8 +177,18 @@
         .map(quiz => Number(quiz.attempt) || 1);
       const attempt = attempts.length ? Math.max(...attempts) + 1 : 1;
       await storage.set({ [stateKey]: { isCompiling: true, sessionId: `${Date.now()}-${crypto.randomUUID()}`, baseTitle, attempt } });
+    } finally {
+      startingRecording = false;
     }
-    await refresh(); capture();
+  }
+
+  async function startIfQuizHasBegun() {
+    // Canvas renders these question containers after an attempt begins,
+    // including when an access code was required first.
+    if (!readQuestions().length) return;
+    await startRecording();
+    await refresh();
+    capture();
   }
 
   document.addEventListener('change', () => capture(), true);
@@ -178,8 +198,12 @@
   }, true);
   chrome.runtime.onMessage.addListener(message => { if (message?.type === 'CAPTURE_VISIBLE') capture(); });
   chrome.storage.onChanged.addListener(changes => { if (changes[stateKey]) refresh(); });
-  const observer = new MutationObserver(() => { clearTimeout(observer.timer); observer.timer = setTimeout(() => { mount(); capture(); }, 400); });
+  const observer = new MutationObserver(() => {
+    clearTimeout(observer.timer);
+    observer.timer = setTimeout(() => { mount(); startIfQuizHasBegun(); capture(); }, 400);
+  });
   if (document.body) observer.observe(document.body, { childList: true, subtree: true });
   mount();
+  startIfQuizHasBegun();
   setTimeout(checkForCompletion, 1000);
 })();
